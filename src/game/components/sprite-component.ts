@@ -1,9 +1,10 @@
 import * as PIXI from 'pixijs';
-// import { Logger } from '../../utils/logger';
 
 export class SpriteComponent {
     private _state: any;
     private _highlightAlpha: number = 1.0;
+    private _elapsedTime: number = 0;
+    private _duration: number = 1.0;
     mainSprite: PIXI.Sprite;
     highlightSprite: PIXI.Sprite;
 
@@ -14,6 +15,7 @@ export class SpriteComponent {
     }
 
     enterHighlight(): void {
+        this._elapsedTime = 0;
         this._highlightAlpha = 1.0;
         this.highlightSprite.alpha = this._highlightAlpha;
     }
@@ -24,9 +26,7 @@ export class SpriteComponent {
     }
 
     updateHighlight(delta: number): void {
-        const fadeAmount = 2.0 * delta;
-        this._highlightAlpha = this._highlightAlpha - fadeAmount ? this._highlightAlpha - fadeAmount : 0.0;
-        this.highlightSprite.alpha = this._highlightAlpha;
+        this.updateAlpha(delta);
     }
 
     setX(x: number): void {
@@ -56,7 +56,17 @@ export class SpriteComponent {
     }
 
     get fadeComplete(): boolean {
-        // Logger.instance.log(`state key: ${this._state.value}`);
-        return this._highlightAlpha <= 0.0 && this._state.value === 'Fading';
+        return this.highlightSprite.alpha <= 0.0 && this._state.value === 'Fading';
+    }
+
+    private easeOutCubic(t: number): number {
+        return (--t) * t * t + 1;
+    }
+
+    private updateAlpha(delta: number): void {
+        this._elapsedTime += delta;
+        const progress = Math.min(this._elapsedTime / this._duration, 1);
+        const alpha = 1 - this.easeOutCubic(progress);
+        this.highlightSprite.alpha = alpha;
     }
 }
